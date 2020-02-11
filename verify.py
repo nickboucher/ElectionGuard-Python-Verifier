@@ -56,7 +56,7 @@ def verify_election(election_data: Dict, log: Logger = None) -> bool:
        Optionally, info can be logged by passing a Logger."""
     # Setup logging infrastructure
     if log is None:
-        log = getLogger("verify_json")
+        log = getLogger("verify_election")
         log.setLevel(CRITICAL)
 
     # Ensure function paraeters are valid
