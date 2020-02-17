@@ -1,3 +1,8 @@
+# ElectionGuard Verifier Schema
+# Nicholas Boucher 2020
+
+# `schema` is a dict containing a jsonschema specification as defined at
+# https://json-schema.org/
 schema = {
   "type": "object",
   "properties": {

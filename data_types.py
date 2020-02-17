@@ -43,8 +43,17 @@ class Parameters(ElectionData):
         self.generator = self.to_int(generator)
 
 
-class Proof(ElectionData):
-    """A proof of posession of the private key."""
+class Message(ElectionData):
+    """A message that has been encrypted using exponential ElGamal."""
+
+    def __init__(self, public_key: str, ciphertext: str) -> None:
+        self.assert_values(public_key, ciphertext)
+        self.public_key = self.to_int(public_key)
+        self.ciphertext = self.to_int(ciphertext)
+
+
+class SchnorrProof(ElectionData):
+    """A Schnorr Proof of posession of a private key."""
 
     def __init__(self, commitment: str, challenge: str, response: str) -> None:
         self.assert_values(commitment, challenge, response)
@@ -53,10 +62,31 @@ class Proof(ElectionData):
         self.response = self.to_int(response)
 
 
+class ChaumPedersenProof(ElectionData):
+    """A Chaum-Pedersen Proof of value constraints."""
+
+    def __init__(self, commitment: Message, challenge: str,
+                 response: str) -> None:
+        self.assert_values(commitment, challenge, response)
+        self.commitment = self.to_int(commitment)
+        self.challenge = self.to_int(challenge)
+        self.response = self.to_int(response)
+
+
+class ChaumPedersenDisjointProof(ElectionData):
+    """A pair of Chaum-Pedersen Proofs for constraned sums."""
+
+    def __init__(self, left: ChaumPedersenProof,
+                 right: ChaumPedersenProof) -> None:
+        self.assert_values(left, right)
+        self.left = left
+        self.right = right
+
+
 class TrusteeCoefficient(ElectionData):
     """Public key with associated proof of knowledge."""
 
-    def __init__(self, public_key: str, proof: Proof) -> None:
+    def __init__(self, public_key: str, proof: SchnorrProof) -> None:
         self.assert_values(public_key, proof)
         self.public_key = self.to_int(public_key)
         self.proof = proof
@@ -64,9 +94,9 @@ class TrusteeCoefficient(ElectionData):
 
 class TrusteePublicKey(ElectionData):
     """Each trustee generates `k` secret coefficients, and generates a public
-        key from each one. The first such key is trustee's main public key
-        (that is, `Ki = K_i0`); the rest are used during decryption if this
-        trustee is absent."""
+       key from each one. The first such key is trustee's main public key
+       (that is, `Ki = K_i0`); the rest are used during decryption if this
+       trustee is absent."""
 
     def __init__(self, coefficients: List[TrusteeCoefficient]) -> None:
         self.assert_values(coefficients)
@@ -86,19 +116,11 @@ class BallotInfo(ElectionData):
         self.tracker = tracker
 
 
-class Message(ElectionData):
-    """A message that has been encrypted using exponential ElGamal."""
-
-    def __init__(self, public_key: str, ciphertext: str) -> None:
-        self.assert_values(public_key, ciphertext)
-        self.public_key = self.to_int(public_key)
-        self.ciphertext = self.to_int(ciphertext)
-
-
 class CastSelection(ElectionData):
     """Cast ballot selection and associated proof."""
 
-    def __init__(self, message: Message, proof: Proof) -> None:
+    def __init__(self, message: Message,
+                 proof: ChaumPedersenDisjointProof) -> None:
         self.assert_values(message, proof)
         self.message = message
         self.proof = proof
@@ -109,7 +131,7 @@ class CastContest(ElectionData):
        proof that exactly `L` of them have been selected."""
 
     def __init__(self, selections: List[CastSelection], max_selections: str,
-                 num_selections_proof: Proof) -> None:
+                 num_selections_proof: ChaumPedersenProof) -> None:
         self.assert_values(selections, max_selections, num_selections_proof)
         self.selections = selections
         self.max_selections = self.to_int(max_selections)
@@ -132,8 +154,8 @@ class Fragment(ElectionData):
     """"A fragment of a missing trustee's share of a decryption, including the
         Lagrange coefficient."""
 
-    def __init__(self, fragment: str, lagrange_coefficient: str, proof: Proof,
-                 trustee_index: str) -> None:
+    def __init__(self, fragment: str, lagrange_coefficient: str,
+                 proof: ChaumPedersenProof, trustee_index: str) -> None:
         self.assert_values(fragment, lagrange_coefficient, proof,
                            trustee_index)
         self.fragment = self.to_int(fragment)
@@ -157,7 +179,7 @@ class Share(ElectionData):
        from an encrypted ballot."""
 
     def __init__(self, recovery: Optional[ShareRecovery],
-                 proof: Optional[Proof], share: str):
+                 proof: Optional[ChaumPedersenProof], share: str):
         self.assert_values(share)
         self.recovery = recovery
         self.proof = proof
