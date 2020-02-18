@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # ElectionGuard Verifier
 # Nicholas Boucher 2020
-from typing import Dict
 from logging import Logger, getLogger, CRITICAL
+from models import Record
 
 
-def verify_election(election_data: Dict, log: Logger = None) -> bool:
+def verify_election(election: Record, log: Logger = None) -> bool:
     """Returns true when the election results `election_data` are valid.
        Optionally, info can be logged by passing a Logger."""
     # Setup logging infrastructure
@@ -21,30 +21,22 @@ def verify_election(election_data: Dict, log: Logger = None) -> bool:
 
     # Test: The number of trustees who can together decrypt the election is
     # greater than zero
-    try:
-        num_trustees = int(election_data['parameters']['num_trustees'])
-    except ValueError:
-        return fail(f"'num_trustees' value "
-                    "'{election_data['parameters']['num_trustees']}' is not a "
-                    "valid number.")
-    if num_trustees <= 0:
-        return fail(f"Invalid number of trustees: {num_trustees}")
+    if election.parameters.num_trustees <= 0:
+        return fail("Invalid number of trustees: "
+                    f"{election.parameters.num_trustees}")
 
     # Test: The threshold of trustees necessary to decrypt the election is
     # greater than zero
-    try:
-        trustees_threshold = int(election_data['parameters']['threshold'])
-    except ValueError:
-        return fail("'threshold' value "
-                    f"'{election_data['parameters']['threshold']}' is not a "
-                    "valid number.")
-    if trustees_threshold <= 0:
+    if election.parameters.threshold <= 0:
         return fail("Invalid trustee decryption threshold: "
-                    f"{trustees_threshold}")
+                    f"{election.parameters.threshold}")
 
     # Test: The threshold of trustees necessary to decrypt the election is not
     # greater than the total number of trustees
-    if trustees_threshold > num_trustees:
-        return fail(f"Trustee decryption threshold ({trustees_threshold}) is "
-                    "greater than the total number of trustees "
-                    f"({num_trustees}).")
+    if election.parameters.threshold > election.parameters.num_trustees:
+        return fail("Trustee decryption threshold ("
+                    f"{election.parameters.threshold}) is greater than the "
+                    "total number of trustees "
+                    f"({election.parameters.num_trustees}).")
+
+    return True
