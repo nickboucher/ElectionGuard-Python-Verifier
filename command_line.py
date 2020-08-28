@@ -5,7 +5,8 @@ from argparse import ArgumentParser, Namespace
 from os.path import isfile
 from logging import basicConfig, getLogger
 from verify import verify_election
-from models import Record
+from models import election_record_from_dict
+from json import loads
 from constants import LOG_VERBOSE, LOG_NORMAL
 
 
@@ -24,7 +25,7 @@ def main() -> None:
 
     # Deserialize election data JSON
     with open(args.election_data, 'r') as f:
-        election = Record.deserialize(f.read())
+        election = election_record_from_dict(loads(f.read()))
 
     # Verify the election results
     if verify_election(election):

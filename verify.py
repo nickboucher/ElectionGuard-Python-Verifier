@@ -1,14 +1,13 @@
-#!/usr/bin/env python3
 # ElectionGuard Verifier
 # Nicholas Boucher 2020
-from logging import basicConfig, getLogger
-from models import Record
-from constants import LOG_NORMAL, LOG_VERBOSE, PRIME, GENERATOR, BYTE_ORDER
+from models import ElectionRecord
+from constants import PRIME, GENERATOR, BYTE_ORDER
+from utils import fail, int_to_bytes
 from hashlib import sha256
 
 
-def verify_election(election: Record) -> bool:
-    """Returns true when the election results `election_data` are valid."""
+def verify_election(election: ElectionRecord) -> bool:
+    """Returns true when the election results `election` are valid."""
 
     # Test: The number of trustees who can together decrypt the election is
     # greater than zero
@@ -54,24 +53,3 @@ def verify_election(election: Record) -> bool:
                     f"{election.extended_base_hash}")
 
     return True
-
-def int_to_bytes(num: int) -> bytes:
-    num_bytes = 0
-    temp = num
-    while temp != 0:
-        temp >>= 8
-        num_bytes += 1
-    return num.to_bytes(num_bytes, BYTE_ORDER)
-
-def fail(message: str) -> bool:
-    """Outputs a failure log message with the passed text and
-        returns false."""
-    # Get logging infrastructure
-    basicConfig(format='%(message)s')
-    log = getLogger("election_verifier")
-
-    # Log failure in verbose mode
-    log.log(LOG_VERBOSE, f"{message}\n")
-
-    # Return false for failure
-    return False
